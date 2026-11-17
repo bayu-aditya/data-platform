@@ -1,0 +1,21 @@
+
+syntax = "proto3";
+
+package dataplatform.v1;
+
+import "google/protobuf/struct.proto";
+
+// ClientService lets clients fetch data as a stream of records.
+service ClientService {
+  // FetchDataStream streams the records produced by a given fetch.
+  rpc FetchDataStream(FetchDataStreamRequest) returns (stream FetchDataStreamResponse);
+}
+
+message FetchDataStreamRequest {
+  string fetch_id = 1;
+  google.protobuf.Struct params = 2;
+}
+
+message FetchDataStreamResponse {
+  google.protobuf.Struct data = 1;
+}
