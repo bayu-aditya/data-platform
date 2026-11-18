@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+package dataplatform.v1;
+
+import "google/protobuf/timestamp.proto";
+
+// AdminService manages the metadata behind the platform: environments today,
+// fetches and data sources in later tickets. List RPCs return every item; there
+// is no pagination.
+service AdminService {
+  // CreateEnvironment creates an environment. The name is a slug and cannot be
+  // changed afterwards. INVALID_ARGUMENT if the name is not a valid slug,
+  // ALREADY_EXISTS if an environment with that name exists.
+  rpc CreateEnvironment(CreateEnvironmentRequest) returns (CreateEnvironmentResponse);
+
+  // ListEnvironments returns all environments, oldest first.
+  rpc ListEnvironments(ListEnvironmentsRequest) returns (ListEnvironmentsResponse);
+
+  // DeleteEnvironment permanently deletes an environment. NOT_FOUND if the id is
+  // unknown, FAILED_PRECONDITION if other resources still reference it.
+  rpc DeleteEnvironment(DeleteEnvironmentRequest) returns (DeleteEnvironmentResponse);
+}
+
+// Environment is a global, user-named target such as "staging" or "production".
+message Environment {
+  string id = 1;
+  // name is a slug matching ^[a-z0-9][a-z0-9-]{1,62}$ and is immutable.
+  string name = 2;
+  google.protobuf.Timestamp created_at = 3;
+  google.protobuf.Timestamp updated_at = 4;
+}
+
+message CreateEnvironmentRequest {
+  string name = 1;
+}
+
+message CreateEnvironmentResponse {
+  Environment environment = 1;
+}
+
+message ListEnvironmentsRequest {}
+
+message ListEnvironmentsResponse {
+  repeated Environment environments = 1;
+}
+
+message DeleteEnvironmentRequest {
+  string id = 1;
+}
+
+message DeleteEnvironmentResponse {}

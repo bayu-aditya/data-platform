@@ -7,6 +7,10 @@ import (
 	"time"
 
 	"connectrpc.com/grpchealth"
+
+	"github.com/bayu-aditya/data-platform/server/gen/dataplatform/v1/dataplatformv1connect"
+	"github.com/bayu-aditya/data-platform/server/internal/handler"
+	"github.com/bayu-aditya/data-platform/server/internal/usecase"
 )
 
 // Config holds the runtime options for the RPC server.
@@ -16,6 +20,8 @@ type Config struct {
 	// ReadHeaderTimeout bounds how long a client may take to send request
 	// headers. Zero falls back to DefaultReadHeaderTimeout.
 	ReadHeaderTimeout time.Duration
+	// Environments backs the AdminService environment RPCs.
+	Environments usecase.EnvironmentUsecase
 }
 
 // DefaultReadHeaderTimeout is used when Config.ReadHeaderTimeout is zero.
@@ -30,17 +36,18 @@ type Server struct {
 // New builds a server that speaks gRPC, gRPC-Web and the Connect protocol over
 // h2c (HTTP/2 without TLS), so a plain gRPC client can talk to it directly.
 //
-// The only registered service is grpc.health.v1.Health. Register additional
+// It registers grpc.health.v1.Health and AdminService. Register additional
 // generated Connect handlers on the mux as services are added, and list their
 // fully-qualified names in the health checker so they can be probed
 // individually.
 func New(cfg Config) *Server {
 	mux := http.NewServeMux()
 
-	// No service names yet: an empty checker reports the process as SERVING
-	// for a check without a service name, and NOT_FOUND for any named one.
-	health := grpchealth.NewStaticChecker()
+	// A check without a service name reports the process as SERVING; a named
+	// check only succeeds for the services listed here.
+	health := grpchealth.NewStaticChecker(dataplatformv1connect.AdminServiceName)
 	mux.Handle(grpchealth.NewHandler(health))
+	mux.Handle(dataplatformv1connect.NewAdminServiceHandler(handler.NewAdminHandler(cfg.Environments)))
 
 	readHeaderTimeout := cfg.ReadHeaderTimeout
 	if readHeaderTimeout == 0 {
