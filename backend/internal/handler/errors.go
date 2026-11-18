@@ -18,6 +18,8 @@ import (
 // error, so database messages, stack details or secrets never reach clients.
 const internalMessage = "internal error"
 
+// kindCodes maps every client-presentable kind. domainerr.Internal is
+// deliberately absent: it takes the generic-message path below.
 var kindCodes = map[domainerr.Kind]connect.Code{
 	domainerr.NotFound:           connect.CodeNotFound,
 	domainerr.AlreadyExists:      connect.CodeAlreadyExists,
@@ -26,7 +28,6 @@ var kindCodes = map[domainerr.Kind]connect.Code{
 	domainerr.Unavailable:        connect.CodeUnavailable,
 	domainerr.DeadlineExceeded:   connect.CodeDeadlineExceeded,
 	domainerr.ResourceExhausted:  connect.CodeResourceExhausted,
-	domainerr.Internal:           connect.CodeInternal,
 }
 
 // ConnectError converts an error returned by a usecase into the error a
@@ -43,7 +44,7 @@ func ConnectError(ctx context.Context, err error) error {
 	}
 
 	if de, ok := errors.AsType[*domainerr.Error](err); ok {
-		if code, ok := kindCodes[de.Kind()]; ok && code != connect.CodeInternal {
+		if code, ok := kindCodes[de.Kind()]; ok {
 			return connect.NewError(code, errors.New(de.Message()))
 		}
 	}

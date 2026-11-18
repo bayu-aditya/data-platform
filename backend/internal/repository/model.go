@@ -2,8 +2,10 @@
 //
 // Each repository is an exported interface (what usecases depend on and
 // what mockery mocks) plus an unexported GORM implementation returned by a
-// New* constructor. Repositories translate storage errors into domainerr
-// errors; nothing above this layer sees GORM or SQL errors.
+// New* constructor. Repositories translate expected storage outcomes
+// (gorm.ErrRecordNotFound, gorm.ErrDuplicatedKey, gorm.ErrForeignKeyViolated)
+// into domainerr errors. Any other error is returned as is: the usecase may
+// classify it, otherwise it surfaces as Internal.
 package repository
 
 import (

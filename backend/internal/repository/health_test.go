@@ -1,7 +1,6 @@
 package repository_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/bayu-aditya/data-platform/server/internal/database"
@@ -28,7 +27,7 @@ func TestHealthPingClosedDatabase(t *testing.T) {
 	}
 	repo := repository.NewHealthRepository(db)
 
-	if err := repo.Ping(context.Background()); err == nil {
+	if err := repo.Ping(t.Context()); err == nil {
 		t.Error("ping on closed database: want error, got nil")
 	}
 }

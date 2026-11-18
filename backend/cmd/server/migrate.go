@@ -101,5 +101,9 @@ func logResult(logger *slog.Logger, r *goose.MigrationResult) {
 		logger.Error("migration failed", append(attrs, slog.Any("error", r.Error))...)
 		return
 	}
+	if r.Direction == "down" {
+		logger.Info("migration rolled back", attrs...)
+		return
+	}
 	logger.Info("migration applied", attrs...)
 }
