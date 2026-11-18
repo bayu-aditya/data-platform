@@ -9,7 +9,9 @@ import (
 
 	"github.com/bayu-aditya/data-platform/server/internal/config"
 	"github.com/bayu-aditya/data-platform/server/internal/database"
+	"github.com/bayu-aditya/data-platform/server/internal/repository"
 	"github.com/bayu-aditya/data-platform/server/internal/server"
+	"github.com/bayu-aditya/data-platform/server/internal/usecase"
 )
 
 // shutdownTimeout bounds how long in-flight requests get to finish after a
@@ -30,7 +32,10 @@ func serve(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 		}
 	}()
 
-	srv := server.New(server.Config{Addr: cfg.GRPCAddr})
+	srv := server.New(server.Config{
+		Addr:         cfg.GRPCAddr,
+		Environments: usecase.NewEnvironmentUsecase(repository.NewEnvironmentRepository(db)),
+	})
 
 	errs := make(chan error, 1)
 	go func() {

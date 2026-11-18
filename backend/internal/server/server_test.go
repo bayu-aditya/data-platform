@@ -11,11 +11,20 @@ import (
 	"connectrpc.com/connect"
 	"connectrpc.com/grpchealth"
 
+	"github.com/bayu-aditya/data-platform/server/gen/dataplatform/v1/dataplatformv1connect"
 	"github.com/bayu-aditya/data-platform/server/internal/server"
 )
 
-// startServer boots the server on a free port and returns its base URL.
+// startServer boots a server with no usecases wired on a free port and
+// returns its base URL.
 func startServer(t *testing.T) string {
+	t.Helper()
+	return startServerWith(t, server.Config{})
+}
+
+// startServerWith boots a server with cfg on a free port, ignoring cfg.Addr,
+// and returns its base URL.
+func startServerWith(t *testing.T, cfg server.Config) string {
 	t.Helper()
 
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
@@ -27,7 +36,8 @@ func startServer(t *testing.T) string {
 		t.Fatalf("release port: %v", err)
 	}
 
-	srv := server.New(server.Config{Addr: addr})
+	cfg.Addr = addr
+	srv := server.New(cfg)
 
 	serveErr := make(chan error, 1)
 	go func() {
@@ -104,5 +114,21 @@ func TestCheckUnknownServiceIsNotFound(t *testing.T) {
 	})
 	if got, want := connect.CodeOf(err), connect.CodeNotFound; got != want {
 		t.Errorf("code = %v, want %v (err: %v)", got, want, err)
+	}
+}
+
+func TestCheckAdminServiceIsServing(t *testing.T) {
+	t.Parallel()
+
+	client := grpcClient(startServer(t))
+
+	res, err := client.Check(context.Background(), &grpchealth.CheckRequest{
+		Service: dataplatformv1connect.AdminServiceName,
+	})
+	if err != nil {
+		t.Fatalf("check: %v", err)
+	}
+	if res.Status != grpchealth.StatusServing {
+		t.Errorf("status = %v, want %v", res.Status, grpchealth.StatusServing)
 	}
 }

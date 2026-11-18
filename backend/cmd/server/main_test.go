@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"log/slog"
 	"net"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -122,16 +123,20 @@ func TestMigrateUpStatusDown(t *testing.T) {
 	}
 
 	migrate("up")
-	if got := appliedVersions(t, dsn); len(got) != 1 || got[0] != 1 {
-		t.Fatalf("after up: applied = %v, want [1]", got)
+	applied := appliedVersions(t, dsn)
+	if len(applied) == 0 || applied[0] != 1 {
+		t.Fatalf("after up: applied = %v, want every migration starting at 1", applied)
 	}
 
 	migrate("up") // idempotent
 	migrate("status")
+	if got := appliedVersions(t, dsn); !slices.Equal(got, applied) {
+		t.Fatalf("after second up: applied = %v, want %v", got, applied)
+	}
 
-	migrate("down")
-	if got := appliedVersions(t, dsn); len(got) != 0 {
-		t.Fatalf("after down: applied = %v, want none", got)
+	migrate("down") // rolls back only the latest migration
+	if got := appliedVersions(t, dsn); !slices.Equal(got, applied[:len(applied)-1]) {
+		t.Fatalf("after down: applied = %v, want %v", got, applied[:len(applied)-1])
 	}
 }
 
