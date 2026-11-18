@@ -11,13 +11,24 @@ Today the only registered service is the standard
 
 ## Run
 
+The server needs a Postgres metadata database. Apply the schema first, then
+start the server:
+
 ```bash
-go run ./cmd/server
+export DATABASE_URL='postgres://user:pass@localhost:5432/dataplatform?sslmode=disable'
+go run ./cmd/server migrate up      # also: migrate down | migrate status
+go run ./cmd/server                 # same as: go run ./cmd/server serve
 ```
 
-| Env var     | Default | Description               |
-| ----------- | ------- | ------------------------- |
-| `GRPC_ADDR` | `:8080` | TCP address to listen on. |
+The server never migrates on startup. It exits immediately if `DATABASE_URL`
+is missing or the database is unreachable.
+
+| Env var          | Default    | Description                         |
+| ---------------- | ---------- | ----------------------------------- |
+| `GRPC_ADDR`      | `:8080`    | TCP address to listen on.           |
+| `DATABASE_URL`   | (required) | Metadata Postgres DSN.              |
+| `QUERY_TIMEOUT`  | `30s`      | Per-query timeout on the data path. |
+| `QUERY_MAX_ROWS` | `100000`   | Row cap per data-path query.        |
 
 ## Probe the health check
 
@@ -57,8 +68,12 @@ only succeed for services passed to `grpchealth.NewStaticChecker` in
 ## Test
 
 ```bash
-go test ./...
+go test ./...          # needs Docker (Postgres via testcontainers)
+go test -short ./...   # skips the Docker-backed tests
+go tool mockery        # regenerate mocks after changing an interface
 ```
 
 The tests in `internal/server` boot the server on an ephemeral port and call
-`Check` over the real gRPC protocol.
+`Check` over the real gRPC protocol. Repository and `cmd/server` tests run
+against a real Postgres container. Under Podman, set
+`TESTCONTAINERS_RYUK_DISABLED=true`.

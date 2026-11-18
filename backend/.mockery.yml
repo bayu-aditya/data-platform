@@ -1,0 +1,18 @@
+# Mock generation for repository and usecase interfaces.
+# Regenerate all mocks from backend/ with:  go tool mockery
+#
+# Every exported interface in the listed packages is mocked into a sibling
+# `mocks` package, e.g. internal/repository/mocks/mock_health_repository.go
+# with type mocks.MockHealthRepository. Add a package here when it gains
+# interfaces that other layers depend on.
+all: true
+dir: "{{.InterfaceDir}}/mocks"
+filename: "mock_{{.InterfaceName | snakecase}}.go"
+pkgname: mocks
+structname: "Mock{{.InterfaceName}}"
+template: testify
+formatter: goimports
+force-file-write: true
+packages:
+  github.com/bayu-aditya/data-platform/server/internal/repository: {}
+  github.com/bayu-aditya/data-platform/server/internal/usecase: {}
