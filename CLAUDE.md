@@ -25,6 +25,8 @@ buf generate                      # regenerate gen/ from proto/
 go tool mockery                   # regenerate all mocks (config: .mockery.yml)
 ```
 
+CI (`.github/workflows/ci.yml`) runs build, vet, test and the server/`go-client` builds on every PR and push to `main`.
+
 `protoc-gen-go`, `protoc-gen-connect-go` and `mockery` are pinned via `tool` directives in `backend/go.mod`, so nothing needs a global install.
 
 **Podman instead of Docker:** testcontainers' reaper container (Ryuk) fails under Podman ("unable to find network ... bridge"). Run tests with `TESTCONTAINERS_RYUK_DISABLED=true`; `pgtest.Main` stops its container itself, so nothing leaks unless the test process is killed.
