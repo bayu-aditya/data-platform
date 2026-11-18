@@ -17,6 +17,7 @@ package pgtest
 
 import (
 	"context"
+	"crypto/rand"
 	"database/sql"
 	"fmt"
 	"log/slog"
@@ -135,6 +136,12 @@ type pgCluster struct {
 	createMu sync.Mutex
 }
 
+// randomPassword returns a throwaway password for the test container, so no
+// credential is hard-coded in the source.
+func randomPassword() string {
+	return rand.Text()
+}
+
 func startCluster() (*pgCluster, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
 	defer cancel()
@@ -142,7 +149,7 @@ func startCluster() (*pgCluster, error) {
 	container, err := tcpostgres.Run(ctx, Image,
 		tcpostgres.WithDatabase("postgres"),
 		tcpostgres.WithUsername("postgres"),
-		tcpostgres.WithPassword("postgres"),
+		tcpostgres.WithPassword(randomPassword()),
 		tcpostgres.BasicWaitStrategies(),
 		// Durability is irrelevant for throwaway test data.
 		testcontainers.WithCmdArgs("-c", "fsync=off", "-c", "synchronous_commit=off", "-c", "full_page_writes=off"),

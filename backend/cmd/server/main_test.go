@@ -65,7 +65,7 @@ func TestServeFailsFastWhenDatabaseUnreachable(t *testing.T) {
 
 	env := envOf(map[string]string{
 		"GRPC_ADDR":    freeAddr(t),
-		"DATABASE_URL": "postgres://user:pass@" + freeAddr(t) + "/app?sslmode=disable",
+		"DATABASE_URL": "postgres://" + freeAddr(t) + "/app?sslmode=disable",
 	})
 
 	start := time.Now()

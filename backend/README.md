@@ -15,7 +15,7 @@ The server needs a Postgres metadata database. Apply the schema first, then
 start the server:
 
 ```bash
-export DATABASE_URL='postgres://user:pass@localhost:5432/dataplatform?sslmode=disable'
+export DATABASE_URL='postgres://<user>:<password>@localhost:5432/dataplatform?sslmode=disable'
 go run ./cmd/server migrate up      # also: migrate down | migrate status
 go run ./cmd/server                 # same as: go run ./cmd/server serve
 ```
